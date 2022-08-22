@@ -2,6 +2,12 @@ import * as trpc from '@trpc/server';
 import * as trpcNext from '@trpc/server/adapters/next';
 import { z } from 'zod';
 
+const stringArray = z.string().array();
+
+type UrlType = z.infer<typeof stringArray>;
+
+const urls: UrlType = [];
+
 export const appRouter = trpc
     .router()
     .query('hello', {
@@ -16,16 +22,9 @@ export const appRouter = trpc
             };
         },
     })
-    .query('custom', {
-        input: z
-            .object({
-                text: z.string().nullish(),
-            })
-            .nullish(),
-        resolve({ input }) {
-            return {
-                string: `My custom message ${input?.text ?? ''}`,
-            };
+    .query('url', {
+        resolve() {
+            return urls;
         },
     })
     .mutation('url', {
@@ -33,7 +32,7 @@ export const appRouter = trpc
             url: z.string(),
         }),
         resolve({ input }) {
-            console.log(input);
+            urls.push(input.url);
         },
     });
 

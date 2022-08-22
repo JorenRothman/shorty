@@ -1,24 +1,31 @@
+import { url } from 'inspector';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 
 const Home: NextPage = () => {
-    const hello = trpc.useQuery(['hello', { text: 'client' }]);
-    const custom = trpc.useQuery(['custom', { text: 'hello' }]);
+    const utils = trpc.useContext();
+
+    const urls = trpc.useQuery(['url']);
 
     const mutation = trpc.useMutation(['url']);
 
-    const onClick = async () => {
-        const url = 'https://google.com';
+    const [url, setUrl] = useState('');
 
-        mutation.mutate({ url });
+    const onClick = async () => {
+        mutation.mutate(
+            { url },
+            {
+                onSuccess() {
+                    setUrl('');
+                    utils.invalidateQueries(['url']);
+                },
+            }
+        );
     };
 
-    if (!hello.data) {
-        return <div>loading...</div>;
-    }
-
-    if (!custom.data) {
+    if (!urls.data) {
         return <div>loading...</div>;
     }
 
@@ -30,10 +37,19 @@ const Home: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <p>{hello.data.greeting}</p>
-            <p>{custom.data.string}</p>
+            {urls.data.map((url, i) => (
+                <div key={i}>{url}</div>
+            ))}
 
-            <button onClick={() => onClick()}>Add URL</button>
+            <form onSubmit={(e) => e.preventDefault()}>
+                <input
+                    placeholder="https://google.com"
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                />
+                <button onClick={() => onClick()}>Add URL</button>
+            </form>
         </div>
     );
 };
