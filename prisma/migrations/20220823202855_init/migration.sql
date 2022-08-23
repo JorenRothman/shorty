@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Url" ALTER COLUMN "count" SET DEFAULT 0;

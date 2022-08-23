@@ -1,29 +1,14 @@
 import * as trpc from '@trpc/server';
 import * as trpcNext from '@trpc/server/adapters/next';
 import { z } from 'zod';
-
-const stringArray = z.string().array();
-
-type UrlType = z.infer<typeof stringArray>;
-
-const urls: UrlType = [];
+import prisma from '../../../server/prisma';
 
 export const appRouter = trpc
     .router()
-    .query('hello', {
-        input: z
-            .object({
-                text: z.string().nullish(),
-            })
-            .nullish(),
-        resolve({ input }) {
-            return {
-                greeting: `hello ${input?.text ?? 'world'}`,
-            };
-        },
-    })
     .query('url', {
-        resolve() {
+        async resolve() {
+            const urls = await prisma.url.findMany();
+
             return urls;
         },
     })
@@ -32,7 +17,16 @@ export const appRouter = trpc
             url: z.string(),
         }),
         resolve({ input }) {
-            urls.push(input.url);
+            const { url } = input;
+
+            const date = new Date();
+
+            return prisma.url.create({
+                data: {
+                    url,
+                    shortUrl: date.getTime().toString(36),
+                },
+            });
         },
     });
 
@@ -43,4 +37,7 @@ export type AppRouter = typeof appRouter;
 export default trpcNext.createNextApiHandler({
     router: appRouter,
     createContext: () => null,
+    batching: {
+        enabled: true,
+    },
 });

@@ -37,8 +37,10 @@ const Home: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            {urls.data.map((url, i) => (
-                <div key={i}>{url}</div>
+            {urls.data.map((item) => (
+                <div key={item.id}>
+                    {item.shortUrl} - {item.url}
+                </div>
             ))}
 
             <form onSubmit={(e) => e.preventDefault()}>
